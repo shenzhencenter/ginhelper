@@ -14,19 +14,17 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var skipPaths map[string]struct{} = make(map[string]struct{})
+var skipLoggerPaths *StringSet
 
 func LoggerMiddleware(logger *zap.Logger, skip ...string) gin.HandlerFunc {
-	for _, path := range skip {
-		skipPaths[path] = struct{}{}
-	}
+	skipLoggerPaths = NewStringSet(skip...)
 
 	return func(c *gin.Context) {
 		start := time.Now().UTC()
 		path := c.Request.URL.Path
 		c.Next()
 
-		if _, ok := skipPaths[path]; !ok {
+		if !skipLoggerPaths.Contains(path) {
 
 			var fields []zapcore.Field = []zapcore.Field{
 				zap.Int("http_status", c.Writer.Status()),
