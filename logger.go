@@ -10,14 +10,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shenzhencenter/goset"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-var skipLoggerPaths *StringSet
+var skipLoggerPaths *goset.Set[string]
 
 func LoggerMiddleware(logger *zap.Logger, skip ...string) gin.HandlerFunc {
-	skipLoggerPaths = NewStringSet(skip...)
+	skipLoggerPaths = goset.New(skip...)
 
 	return func(c *gin.Context) {
 		start := time.Now().UTC()

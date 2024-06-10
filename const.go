@@ -1,5 +1,6 @@
 package ginhelper
 
+// cloudfare headers
 const (
 	CfRay            = "CF-RAY"
 	CfConnectingIP   = "CF-Connecting-IP"

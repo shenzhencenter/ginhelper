@@ -3,15 +3,17 @@ package ginhelper
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/shenzhencenter/goset"
 )
 
 var (
-	skipMetricsPaths    *StringSet
+	skipMetricsPaths    *goset.Set[string]
 	counter             *prometheus.CounterVec
 	histogram           *prometheus.HistogramVec
 	ginMetricsNamespace = os.Getenv("GIN_METRICS_NAMESPACE")
@@ -58,7 +60,7 @@ func observe(handlsTime float64, httpStatus, host, method, path string) {
 }
 
 func GinMetricsMiddleware(skip ...string) gin.HandlerFunc {
-	skipMetricsPaths = NewStringSet(skip...)
+	skipMetricsPaths = goset.New(skip...)
 	return func(c *gin.Context) {
 		start := time.Now()
 		c.Next()
@@ -68,7 +70,7 @@ func GinMetricsMiddleware(skip ...string) gin.HandlerFunc {
 		if len(path) == 0 && c.Request.URL != nil {
 			path = c.Request.URL.Path
 		}
-		if skipMetricsPaths.MatchesPrefix(path) {
+		if hit, _ := skipMetricsPaths.SearchOne(func(prefix string) bool { return strings.HasPrefix(path, prefix) }); hit {
 			return
 		}
 		httpStatus := strconv.Itoa(c.Writer.Status())
